@@ -10,10 +10,10 @@ import shutil
 
 ###################################################################
 
-
-password = input("password: ")
 file = input("FileName: ")
 crypt = input("E for Encrypt, D for Decrypt [E/D]: ")
+password = input("password: ")
+
 
 
 ###################################################################
