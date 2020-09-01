@@ -1,4 +1,3 @@
-
 import base64
 import os
 from cryptography.hazmat.backends import default_backend
@@ -28,6 +27,14 @@ def encryption(password):
 
 def encrypt(file, key):
     
+    try:
+        fileName, fileEnd = file.split('.')
+        os.mkdir(fileName)
+        shutil.move(file, fileName)
+        file = fileName
+    except:
+        pass
+
     shutil.make_archive(file, 'zip', file)
     # open File to encrypt
     with open(file + '.zip', 'rb') as f:
@@ -42,27 +49,29 @@ def encrypt(file, key):
         f.write(encrypted)
     
     
-    shutil.rmtree(file)
+    #shutil.rmtree(file)
     os.remove(file + '.zip')
+    shutil.rmtree(file)
 
 
 
 def decrypt(file, key):
+    fileName, fileEnd = file.split('.')
     # open File to decrypt
-    with open(file + '.pcrpt', 'rb') as f:
+    with open(file, 'rb') as f:
         data = f.read()
 
     Fer = Fernet(key)
     decrypted = Fer.decrypt(data)
 
     # write decrypted data
-    with open(file + '.zip', 'wb') as f:
+    with open(fileName + '.zip', 'wb') as f:
         f.write(decrypted)
-    
-    shutil.unpack_archive(file + '.zip', file)
+        
+    shutil.unpack_archive(fileName + '.zip', fileName)
 
-    os.remove(file + '.zip')
-    os.remove(file + '.pcrpt')
+    os.remove(fileName + '.zip')
+    os.remove(fileName + '.pcrpt')
     
 
 
