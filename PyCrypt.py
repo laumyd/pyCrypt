@@ -6,17 +6,9 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.fernet import Fernet
 import shutil
+import argparse
 
 
-###################################################################
-
-file = input("FileName: ")
-crypt = input("E for Encrypt, D for Decrypt [E/D]: ")
-password = input("password: ")
-
-
-
-###################################################################
 
 def encryption(password):
     # get key from Password
@@ -31,24 +23,12 @@ def encryption(password):
         backend=default_backend()
     )
     key = base64.urlsafe_b64encode(kdf.derive(password)) # can only use kdf once
-    print (key)
     return(key)
 
-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
-def zipCompile(file):
-    shutil.make_archive(file, 'zip', file)
-    
-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
-def zipEcstract(file):
-    shutil.unpack_archive(file + '.zip', file)
-
-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
 def encrypt(file, key):
     
-    zipCompile(file)
+    shutil.make_archive(file, 'zip', file)
     # open File to encrypt
     with open(file + '.zip', 'rb') as f:
         data = f.read()
@@ -58,18 +38,18 @@ def encrypt(file, key):
 
     # write encrypted data
     file = file.replace('.zip', '')
-    with open(file + '.encrypted', 'wb') as f:
+    with open(file + '.pcrpt', 'wb') as f:
         f.write(encrypted)
     
     
     shutil.rmtree(file)
     os.remove(file + '.zip')
-    
-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#    
+
+
 
 def decrypt(file, key):
     # open File to decrypt
-    with open(file + '.encrypted', 'rb') as f:
+    with open(file + '.pcrpt', 'rb') as f:
         data = f.read()
 
     Fer = Fernet(key)
@@ -79,24 +59,32 @@ def decrypt(file, key):
     with open(file + '.zip', 'wb') as f:
         f.write(decrypted)
     
-    zipEcstract(file)
+    shutil.unpack_archive(file + '.zip', file)
 
     os.remove(file + '.zip')
-    os.remove(file + '.encrypted')
+    os.remove(file + '.pcrpt')
     
 
-############################################################
+
+def run(args):
+    if args.mode.casefold() in ('e', 'encrypt'):
+        encrypt(args.input, encryption(args.password))
+    if args.mode.casefold() in ('d', 'decrypt'):
+        decrypt(args.input, encryption(args.password))
+
+def main():
+	parser=argparse.ArgumentParser(description="")
+	parser.add_argument("-i, --input",help="input file", metavar='', dest="input", type=str, required=True)
+	parser.add_argument("-p, --password",help="file password", metavar='', dest="password", type=str, required=True)
+	parser.add_argument("-m, --mode", help="Encrypt or Decrypt", metavar='', dest="mode", type=str, required=True)
+	parser.set_defaults(func=run)
+	args=parser.parse_args()
+	args.func(args)
 
 
+if __name__=="__main__":
+	main()
 
-# Encrypt
-if(crypt == "E" or crypt == "e"):
-    encrypt(file, encryption(password))
-    
-# Decrypt
-if(crypt == "D" or crypt == "d"):
-    decrypt(file, encryption(password))
-    
 
 
 
